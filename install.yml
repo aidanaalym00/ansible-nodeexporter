@@ -1,0 +1,98 @@
+---
+- name: Install Node Exporter on localhost and slave EC2 Ubuntu instances
+  hosts: server
+  become: yes
+  tasks:
+    - name: Ensure /opt/node_exporter directory exists on localhost
+      file:
+        path: /opt/node_exporter
+        state: directory
+
+    - name: Download Node Exporter on localhost
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+        dest: /tmp/node_exporter.tar.gz
+      register: node_exporter_download_local
+
+    - name: Extract Node Exporter on localhost
+      ansible.builtin.unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /opt/node_exporter
+        remote_src: yes
+      when: node_exporter_download_local.changed
+
+    - name: Ensure /etc/node_exporter directory exists on localhost
+      file:
+        path: /etc/node_exporter
+        state: directory
+
+    - name: Copy Node Exporter configuration file on localhost
+      ansible.builtin.template:
+        src: install_node/node_exporter.conf.j2
+        dest: /etc/node_exporter/node_exporter.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create Node Exporter systemd service unit on localhost
+      ansible.builtin.template:
+        src: install_node/node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable and start Node Exporter systemd service on localhost
+      ansible.builtin.systemd:
+        name: node_exporter
+        enabled: yes
+        state: started
+
+- name: Install Node Exporter on localhost and slave EC2 Ubuntu instances
+  hosts: slave
+  become: yes
+  tasks:
+    - name: Ensure /opt/node_exporter directory exists on slaves
+      file:
+        path: /opt/node_exporter
+        state: directory
+
+    - name: Download Node Exporter on slaves
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.7.0/node_exporter-1.7.0.linux-amd64.tar.gz
+        dest: /tmp/node_exporter.tar.gz
+      register: node_exporter_download_slave
+
+    - name: Extract Node Exporter on slaves
+      ansible.builtin.unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /opt/node_exporter
+        remote_src: yes
+      when: node_exporter_download_slave.changed
+
+    - name: Ensure /etc/node_exporter directory exists on slaves
+      file:
+        path: /etc/node_exporter
+        state: directory
+
+    - name: Copy Node Exporter configuration file on slaves
+      ansible.builtin.template:
+        src: install_node/node_exporter.conf.j2
+        dest: /etc/node_exporter/node_exporter.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Create Node Exporter systemd service unit on slaves
+      ansible.builtin.template:
+        src: install_node/node_exporter.service.j2
+        dest: /etc/systemd/system/node_exporter.service
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: Enable and start Node Exporter systemd service on slaves
+      ansible.builtin.systemd:
+        name: node_exporter
+        enabled: yes
+        state: started

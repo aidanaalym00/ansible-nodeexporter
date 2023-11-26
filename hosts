@@ -1,0 +1,5 @@
+[server]
+localhost ansible_connection=local
+
+[slave]
+172.31.44.11

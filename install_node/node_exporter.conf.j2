@@ -1,0 +1,8 @@
+# /etc/node_exporter/node_exporter.conf
+
+# Example configuration for Node Exporter
+
+# Set the web.listen-address to the IP and port you want Node Exporter to listen on.
+web.listen-address: {{ node_exporter_listen_address | default("0.0.0.0:9100") }}
+
+# Add any additional configuration parameters here
